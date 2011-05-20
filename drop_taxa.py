@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-## This script reads a TNT formated dataset and randomly deletes one taxon at a time, while writing remainder of the dataset into a file
+## This script reads a TNT formated dataset and randomly deletes a number of taxa at a time, while writing remainder of the dataset into a file
 ## deletes from 1 to ntax-2 taxa
 
 import sys;
@@ -8,13 +8,14 @@ import random;
 
 random.seed();
 
-if len(sys.argv) < 4:
-	print "You need more arguments.\nusage: command datafile ntax nchar\n\n"
+if len(sys.argv) < 5:
+	print "You need more arguments.\nusage: command datafile ntax nchar ntaxaToDelete\n\n"
 	sys.exit()
 
 datafile = open(sys.argv[1], "r");
 ntax  = int(sys.argv[2]);
 nchar = int(sys.argv[3]);
+k = int(sys.argv[4]);
 
 # get outgroup
 tmp = [];
@@ -50,19 +51,24 @@ for e in tmp:
 	if e not in taxa:
 		taxa.append(e);
 
+
 for i in range(0, ntax):
-	if len(taxa) == 2:
+	# remove outgroup from this list
+	taxa.remove(outgroup); 
+
+	if len(taxa) < k + 1:
 		sys.exit();
 
-	# remove one random taxon from taxa list
-	to_remove = random.randint(1, len(taxa));
-	while len(taxa) == to_remove:
-		to_remove = random.randint(1, len(taxa));
+	# remove k random taxa from taxa list
+	to_remove = random.sample(taxa, k);
 
-	print "deleting taxon: ", to_remove;
-	taxa.pop(to_remove);
+	print "deleting ", k, "taxa";
+	for i in to_remove:
+		if i in taxa:
+			taxa.remove(i);
+		
 	
-	# create a dataset excluding the just deleted taxon
+	# create a dataset excluding the just deleted taxa
 	filename = "dataset_" + str(len(taxa) + 1) + ".tnt";
 
 	print "writing into file name: ", filename, "\n";
@@ -71,6 +77,10 @@ for i in range(0, ntax):
 
 	counter = 0;
 	output = "";
+
+	# add outgroup to taxa
+	taxa.insert(0, outgroup);
+
 	for item in mydata:
 	#print item
 		if len(item) > 60:
